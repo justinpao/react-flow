@@ -1,39 +1,58 @@
-import React from 'react';
-const ExampleComponent = ({ triggerQuery, model, modelUpdate }) => {
-  const handleChange = (e) => {
-    modelUpdate({
-      headerText: e.target.value
-    })
-  }
-  return(
-    <div style={{width: '100vw', height: '100vh'}}>
-      <div>
-        <h4>{model.headerText ?? ''}</h4>
-        <p>Want to run a query?</p>
-        <button
-          onClick={()=>triggerQuery(model.yesQuery)}
-        >
-          👍
-        </button>
-        <button
-          onClick={()=>triggerQuery(model.noQuery)}
-        >
-          👎
-        </button>
-      </div>
-      <div>
-        <button
-          onClick={()=>triggerQuery(model.runQuery)}
-        >Get a random user</button>
-      </div>
-      <div>
-        <p>Hello Dave Leo?</p>
-        <input onChange={handleChange} />
-      </div>
-      <h2>
-        {model.displayText}
-      </h2>
-    </div>
+import React, { useCallback } from "react";
+import ReactFlow, {
+  addEdge,
+  MiniMap,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState
+} from "reactflow";
+import "reactflow/dist/style.css";
+
+// git 
+
+const onInit = (reactFlowInstance) =>
+  console.log("flow loaded:", reactFlowInstance);
+
+const OverviewFlow = ({ triggerQuery, model, modelUpdate }) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(model.initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(model.initialEdges);
+  const onConnect = useCallback(
+    (params) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
   );
-}
-export default ExampleComponent;
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onConnect={onConnect}
+      onInit={onInit}
+      fitView
+      attributionPosition="top-right"
+    >
+      <MiniMap
+        nodeStrokeColor={(n) => {
+          if (n.style?.background) return n.style.background;
+          if (n.type === "input") return "#0041d0";
+          if (n.type === "output") return "#ff0072";
+          if (n.type === "default") return "#1a192b";
+
+          return "#eee";
+        }}
+        nodeColor={(n) => {
+          if (n.style?.background) return n.style.background;
+
+          return "#fff";
+        }}
+        nodeBorderRadius={2}
+      />
+      <Controls />
+      <Background color="#aaa" gap={16} />
+    </ReactFlow>
+  );
+};
+
+export default OverviewFlow;
